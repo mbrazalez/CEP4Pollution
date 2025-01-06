@@ -32,6 +32,7 @@ const initialState = Object.keys(CONNECTION_NAMES).reduce((acc, key) => {
 
 export default function Stats() {
   const [pm10Data, setPm10Data] = useState(initialState);
+  const [pm25Data, setPm25Data] = useState(initialState);
   const [humidityData, setHumidityData] = useState(initialState);
   const [selectedStations, setSelectedStations] = useState([]);
 
@@ -43,7 +44,6 @@ export default function Stats() {
       client.subscribe('pm10topic');
       client.subscribe('pm25topic');
       client.subscribe('humiditytopic');
-      client.subscribe('windtopic');
     });
 
     client.on('message', (topic, message) => {
@@ -59,6 +59,9 @@ export default function Stats() {
             break;
           case 'humiditytopic':
             updateData(setHumidityData, connection, newPoint);
+            break;
+          case 'pm25topic':
+            updateData(setPm25Data, connection, newPoint);
             break;
          
           default:
@@ -142,6 +145,9 @@ export default function Stats() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
         <div>
           <Line data={createChartData(pm10Data)} options={{...chartOptions, plugins: { title: { display: true, text: 'PM10 Concentration' } }}} />
+        </div>
+        <div>
+          <Line data={createChartData(pm25Data)} options={{...chartOptions, plugins: { title: { display: true, text: 'PM2.5 Concentration' } }}} />
         </div>
         <div>
           <Line data={createChartData(humidityData)} options={{...chartOptions, plugins: { title: { display: true, text: 'Humidity' } }}} />
