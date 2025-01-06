@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  api:
+    image: mbrazalez/api4eventprocessing
+    environment:
+      MQTTBROKERIP: mosquitto
+      SPRING_APPLICATION_NAME: API4EventProcessing
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto:/etc/mosquitto
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
