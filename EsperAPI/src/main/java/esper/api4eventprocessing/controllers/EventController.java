@@ -3,7 +3,6 @@ package esper.api4eventprocessing.controllers;
 import esper.api4eventprocessing.events.HumidityEvent;
 import esper.api4eventprocessing.events.PM10Event;
 import esper.api4eventprocessing.events.PM25Event;
-import esper.api4eventprocessing.events.WindSpeedEvent;
 import esper.api4eventprocessing.petitions.EventJsonPetition;
 import esper.api4eventprocessing.services.EsperService;
 import org.springframework.http.HttpStatus;
@@ -64,21 +63,6 @@ public class EventController {
             return new ResponseEntity<>("Wrong JSON format or the given event doesn't match with any event type", HttpStatus.BAD_REQUEST);
         }
     }
-
-    @PostMapping("/api/v1/send_windspeed-event")
-    public ResponseEntity<?> sendPM25Event(@RequestBody WindSpeedEvent windSpeedEvent){
-        if (windSpeedEvent.station == null)
-            return new ResponseEntity<>("Parameters missing in the request body", HttpStatus.BAD_REQUEST);
-
-        try {
-            esperService.sendEvent(windSpeedEvent,"WindSpeedEvent");
-            return new ResponseEntity<>("Event received by the Esper Engine", HttpStatus.OK);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>("Wrong JSON format or the given event doesn't match with any event type", HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @PostMapping("/api/v1/send_humidity-event")
     public ResponseEntity<?> sendPM25Event(@RequestBody HumidityEvent humidityEvent){
         if (humidityEvent.station == null)

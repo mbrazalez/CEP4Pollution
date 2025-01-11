@@ -116,7 +116,7 @@ public class EsperService implements IEsperService {
         if (epCompiled != null){
             EPDeployment epDeployment = this.esperEngineRepository.deploy(epCompiled);
             String deploymentId = epDeployment.getDeploymentId();
-            this.esperEngineRepository.addListener(patternName,deploymentId, callback);
+            this.esperEngineRepository.addListener(patternName, deploymentId, callback);
             this.patternOperationsRepository.addDeployedPattern(patternName, epDeployment);
             String query = this.patternOperationsRepository.getPatternQuery(patternName);
             return new PatternResponse(patternName, query, "Pattern deployed successfully with id " + deploymentId);

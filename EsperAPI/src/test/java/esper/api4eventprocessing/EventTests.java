@@ -4,7 +4,6 @@ import esper.api4eventprocessing.controllers.EventController;
 import esper.api4eventprocessing.controllers.EventTypeController;
 import esper.api4eventprocessing.events.PM10Event;
 import esper.api4eventprocessing.events.PM25Event;
-import esper.api4eventprocessing.events.WindSpeedEvent;
 import esper.api4eventprocessing.events.HumidityEvent;
 import esper.api4eventprocessing.petitions.EventJsonPetition;
 import esper.api4eventprocessing.petitions.EventTypePetition;
@@ -78,21 +77,6 @@ class EventControllerTests {
         PM25Event pm25Event = new PM25Event(System.currentTimeMillis(),42.0f,"station1");
         pm25Event.station = null;
         ResponseEntity<?> response = eventController.sendPM25Event(pm25Event);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
-    void sendWindSpeedEventWithValidData() {
-        WindSpeedEvent windSpeedEvent = new WindSpeedEvent(System.currentTimeMillis(),42.0f,"station1",41.0f);
-        ResponseEntity<?> response = eventController.sendPM25Event(windSpeedEvent);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    @Test
-    void sendWindSpeedEventWithInvalidData() {
-        WindSpeedEvent windSpeedEvent = new WindSpeedEvent(System.currentTimeMillis(),42.0f,"station1",41.0f);
-        windSpeedEvent.station = null;
-        ResponseEntity<?> response = eventController.sendPM25Event(windSpeedEvent);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 

@@ -23,7 +23,7 @@ const CONNECTION_NAMES = {
   A6: 'Imaginalia',
 };
 
-const mqttBrokerIP = process.env.REACT_APP_MQTTBROKERIP;
+const mqttBrokerIP = process.env.REACT_APP_MQTTBROKERIP || 'localhost';
 
 const initialState = Object.keys(CONNECTION_NAMES).reduce((acc, key) => {
   acc[key] = Array(10).fill({ x: new Date().getTime(), y: 0 });
@@ -41,9 +41,9 @@ export default function Stats() {
     const client = mqtt.connect(`ws://${mqttBrokerIP}:9001`);
     client.on('connect', () => {
       console.log('Connected to MQTT broker.');
-      client.subscribe('pm10topic');
-      client.subscribe('pm25topic');
-      client.subscribe('humiditytopic');
+      client.subscribe('highpm10topic');
+      client.subscribe('highpm25topic');
+      client.subscribe('highhumiditytopic');
     });
 
     client.on('message', (topic, message) => {
@@ -54,14 +54,14 @@ export default function Stats() {
 
       if (CONNECTION_NAMES[connection]) {
         switch (topic) {
-          case 'pm10topic':
+          case 'highpm10topic':
             updateData(setPm10Data, connection, newPoint);
             break;
-          case 'humiditytopic':
-            updateData(setHumidityData, connection, newPoint);
-            break;
-          case 'pm25topic':
+          case 'highpm25topic':
             updateData(setPm25Data, connection, newPoint);
+            break;
+          case 'highhumiditytopic':
+            updateData(setHumidityData, connection, newPoint);
             break;
          
           default:

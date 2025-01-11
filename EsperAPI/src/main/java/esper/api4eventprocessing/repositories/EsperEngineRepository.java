@@ -10,14 +10,11 @@ import com.espertech.esper.runtime.client.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import esper.api4eventprocessing.events.*;
 import esper.api4eventprocessing.interfaces.MqttPublisherCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class EsperEngineRepository {
-    private static final Logger log = LoggerFactory.getLogger(EsperEngineRepository.class);
     private static EsperEngineRepository instance;
     private Configuration configuration;
     private CompilerArguments compilerArguments;
@@ -51,17 +48,12 @@ public class EsperEngineRepository {
     private void initializePollutionControlEventTypes() {
         this.configuration.getCommon().addEventType(HumidityEvent.class);
         this.configuration.getCommon().addEventType(PM10Event.class);
-        this.configuration.getCommon().addEventType(WindSpeedEvent.class);
         this.configuration.getCommon().addEventType(PM25Event.class);
-        this.configuration.getCommon().addEventType(StationMeasurement.class);
     }
-
-
 
     public EPCompiled compile(String epl) throws EPCompileException {
         this.compilerArguments = new CompilerArguments(this.configuration);
         this.compilerArguments.getPath().add(this.epRuntime.getRuntimePath());
-       // this.compilerArguments.getConfiguration().getCompiler().getByteCode().setAllowSubscriber(true);
         return epCompiler.compile(epl, this.compilerArguments);
     }
 
@@ -109,35 +101,31 @@ public class EsperEngineRepository {
                 try {
                     Map<String, Object> eventProperties = new HashMap<>();
                     String eventType = lastEvent.getEventType().getName();
-                    String topic = "ceptopic";
+                    String topic = "";
 
-                    if (eventType.equals("Measurements4FIS")){
-                        eventProperties.put("eventTime", lastEvent.get("eventTime"));
-                        eventProperties.put("stationId", lastEvent.get("stationId"));
-                        eventProperties.put("avgPM10", lastEvent.get("pm10Avg"));
-                        eventProperties.put("avgPM25", lastEvent.get("pm25Avg"));
-                        eventProperties.put("avgHumidity", lastEvent.get("humidityAvg"));
-
-                        topic = "fistopic";
-
-                    }else if (eventType.equals("HighWindSpeed")){
-                        eventProperties.put("eventTime", lastEvent.get("eventTime"));
-                        eventProperties.put("stationId", lastEvent.get("stationId"));
-                        eventProperties.put("speed1", lastEvent.get("speed1"));
-                        eventProperties.put("speed2", lastEvent.get("speed2"));
-                        eventProperties.put("speed3", lastEvent.get("speed3"));
-                        eventProperties.put("speed4", lastEvent.get("speed4"));
-
-
-                    }else{
-                        eventProperties.put("eventTime", lastEvent.get("eventTime"));
-                        eventProperties.put("stationId", lastEvent.get("stationId"));
-                        eventProperties.put("avgValue", lastEvent.get("avgValue"));
-                        eventProperties.put("type", eventType);
+                    eventProperties.put("timestamp", lastEvent.get("eventTime"));
+                    eventProperties.put("station", lastEvent.get("stationId"));
+                    eventProperties.put("value", lastEvent.get("avgValue"));
+                    
+                    switch (eventType) {
+                        case "HighPM10Level":
+                            topic = "highpm10topic";
+                            break;
+                        case "HighPM25Level":
+                            topic = "highpm25topic";                            
+                            break;
+                        case "HighHumidityPercentage":
+                            topic = "highhumiditytopic";
+                            break;
+                    
+                        default:
+                            break;
                     }
 
                     ObjectMapper objectMapper = new ObjectMapper();
                     String eventString = objectMapper.writeValueAsString(eventProperties);
+                    
+                    System.out.printf("Publicando " + eventString + " en " + topic + "\n");
 
                     callback.publishAsync(eventString.getBytes(), topic);
 

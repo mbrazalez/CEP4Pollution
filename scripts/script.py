@@ -4,7 +4,7 @@ from datetime import datetime
 from paho.mqtt import client as mqtt_client
 import json
 
-broker = '172.19.0.2'
+broker = 'localhost'
 port = 1883
 list_of_stations = ["A1", "A2", "A3", "A4", "A5", "A6"]
 
@@ -12,11 +12,12 @@ list_of_stations = ["A1", "A2", "A3", "A4", "A5", "A6"]
 def create_event():
     timestamp = int(datetime.now().timestamp())
     station = random.choice(list_of_stations)
-    pm10val = random.uniform(0, 200)
-    humidityval = random.uniform(0, 100)
+    value = random.uniform(0, 200)
+    humidityval = random.uniform(90, 100)
 
     return {
-        "pm10topic": {"timestamp": timestamp, "value": pm10val, "station": station},
+	"pm25topic": {"timestamp": timestamp, "value": value, "station": station},
+        "pm10topic": {"timestamp": timestamp, "value": value, "station": station},
         "humiditytopic": {"timestamp": timestamp, "value": humidityval, "station": station},
     }
 

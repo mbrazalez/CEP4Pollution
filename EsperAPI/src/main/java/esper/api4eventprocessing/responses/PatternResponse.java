@@ -11,7 +11,6 @@ public class PatternResponse {
         this.message = message;
     }
 
-
     public String getName() {
         return this.name;
     }
