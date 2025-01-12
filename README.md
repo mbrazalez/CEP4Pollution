@@ -26,15 +26,15 @@ Ejecuta la simulación de la ESP32 con wowki
 ### Paso 5: Acceder a la Dashboard
 
 Abre tu navegador y accede a la dashboard a través de la URL:
-arduino
-Copiar código
+```bash
+http://localhost:3000
+```
 
 ### Paso 6: (Opcional) API Swagger del Motor CEP
 Si estás familiarizado con Esper y el procesamiento de eventos complejos, puedes acceder a la configuración de la API en:
-[
-bash
-Copiar código](http://localhost:8080/swagger-ui.html)
-
+```bash
+http://localhost:8080/swagger-ui.html
+```
 En esta página encontrarás un documento de configuración de API con todas las operaciones que se pueden realizar sobre el motor CEP mediante peticiones HTTP.
 
 
