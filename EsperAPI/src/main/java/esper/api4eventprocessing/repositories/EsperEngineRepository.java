@@ -95,9 +95,6 @@ public class EsperEngineRepository {
         deployedStmt.addListener((newEvents, oldEvents, stmt, runtime) -> {
             if (newEvents != null){
                 EventBean lastEvent = newEvents[0];
-                System.out.printf("##################################\n");
-                System.out.printf("Evento complejo detectado \n");
-                System.out.printf("##################################\n");
                 try {
                     Map<String, Object> eventProperties = new HashMap<>();
                     String eventType = lastEvent.getEventType().getName();
@@ -125,8 +122,6 @@ public class EsperEngineRepository {
                     ObjectMapper objectMapper = new ObjectMapper();
                     String eventString = objectMapper.writeValueAsString(eventProperties);
                     
-                    System.out.printf("Publicando " + eventString + " en " + topic + "\n");
-
                     callback.publishAsync(eventString.getBytes(), topic);
 
                 } catch (Exception e) {

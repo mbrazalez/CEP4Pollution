@@ -7,13 +7,15 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --silent
 
-# Copy the rest of your app's source code from your host to your image filesystem.
+# Copy the app's source code into the container
 COPY . .
 
 # Expose the default port the development server runs on
 EXPOSE 3000
 
-# CMD to start the app, now set to run a script instead
-CMD ["sh", "entrypoint.sh"]
+# Execute the app
+CMD ["npm", "start"]
+
+

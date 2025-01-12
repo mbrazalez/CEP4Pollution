@@ -4,13 +4,14 @@ from datetime import datetime
 from paho.mqtt import client as mqtt_client
 import json
 
-broker = 'localhost'
+broker = '54.173.0.126'
 port = 1883
 list_of_stations = ["A1", "A2", "A3", "A4", "A5", "A6"]
 
 # Función para crear un evento simulado
 def create_event():
     timestamp = int(datetime.now().timestamp())
+    print("Timestamp: ", timestamp)    
     station = random.choice(list_of_stations)
     value = random.uniform(0, 200)
     humidityval = random.uniform(90, 100)

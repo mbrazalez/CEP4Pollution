@@ -5,6 +5,8 @@
 #include <DHT_U.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <time.h>
+
 
 // Incluimos las librerías de FreeRTOS para manejo de tareas, colas y semáforos
 #include "freertos/FreeRTOS.h"
@@ -12,23 +14,24 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 
-// Configuración de MQTT
-#define MQTT_CLIENT_ID "wokwi_sensor"
-#define MQTT_BROKER "test.mosquitto.org"
-#define MQTT_PORT 1883
-#define MQTT_TOPIC "/smartcities/airquality"
-
-// Coordenadas iniciales GPS
-#define INITIAL_LAT 42.411567
-#define INITIAL_LONG 13.397309
-#define MOVE_AMOUNT 1
-
 // Configuración de WiFi
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
+// Configuración de MQTT
+#define MQTT_CLIENT_ID "wokwi_sensor"
+#define MQTT_BROKER "204.236.215.146"
+#define MQTT_PORT 1883
+
+// Cliente MQTT
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// Lista de estaciones
+String stations[] = {"A1", "A2", "A3", "A4", "A5", "A6"};
+
 // Configuración de DHT22
-#define DHTPIN 15
+#define DHTPIN 27
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -41,14 +44,6 @@ DHT dht(DHTPIN, DHTTYPE);
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-// Cliente MQTT
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-// Variables GPS simuladas
-float prev_lat = INITIAL_LAT;
-float prev_long = INITIAL_LONG;
 
 // Definimos colas para almacenar los valores del sensor DHT22 y del potenciómetro
 QueueHandle_t xQueueHumidity;
@@ -66,12 +61,61 @@ float mapADC(int raw, int minADC, int maxADC, float minVal, float maxVal) {
   return (float)(raw - minADC) * (maxVal - minVal) / (maxADC - minADC) + minVal;
 }
 
-// Función para obtener coordenadas aleatorias
-void getCoordinates(float &lat, float &long_) {
-  float variation_lat = ((float)random(-1000, 1000) / 1000000) * MOVE_AMOUNT;
-  float variation_long = ((float)random(-1000, 1000) / 1000000) * MOVE_AMOUNT;
-  lat += variation_lat;
-  long_ += variation_long;
+// Función para obtener estación aleatoria
+String getRandomStation() {
+  int randomIndex = random(0, 6); // Deberías incluir 6 ya que tienes 6 estaciones
+  return stations[randomIndex];
+}
+
+// Conexión WiFi
+void connectWiFi() {
+  Serial.println("Conectando a WiFi...");
+  WiFi.begin(ssid, password);
+  
+  int attempts = 0;  // Contador de intentos
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+    attempts++;
+    if (attempts > 20) {  // Limitar el número de intentos
+      Serial.println("Error: No se pudo conectar a la red WiFi.");
+      return;
+    }
+  }
+  
+  Serial.println("");
+  Serial.println("¡Conexión WiFi establecida!");
+  Serial.print("Dirección IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+// Conexión a MQTT
+void connectMQTT() {
+  while (!client.connected()) {
+    Serial.print("Conectando al servidor MQTT...");
+    if (client.connect(MQTT_CLIENT_ID)) {
+      Serial.println("¡Conectado!");
+    } else {
+      Serial.print("Fallo, rc=");
+      Serial.print(client.state());
+      Serial.println(" Intentando de nuevo en 5 segundos...");
+      delay(5000);
+    }
+  }
+}
+
+// Configura la zona horaria y el servidor NTP
+void configTimeSetup() {
+  // Configurar zona horaria, por ejemplo para Central European Time (CET)
+  configTime(1 * 3600, 3600, "pool.ntp.org", "time.nist.gov");
+
+  Serial.println("\nWaiting for time");
+  struct tm timeinfo;
+  while (!getLocalTime(&timeinfo)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("\nTime synchronized");
 }
 
 // Tarea para leer la humedad desde el sensor DHT22
@@ -87,7 +131,6 @@ void vTaskHumidityReader(void* pvParam){
       Serial.println("Error al leer la temperatura del sensor DHT22");
     } else {
       xStatus = xQueueSendToBack(xQueueHumidity, &humidity, 0); // Envía el valor a la cola
-      if (xStatus != pdPASS) Serial.println("Could not send to the queue.\r\n");
     }
     vTaskDelay(xTicksToWait);  // Espera 250 ms antes de la próxima lectura
   }
@@ -138,43 +181,6 @@ void vTaskPM25Reader(void* pvParam) {
   vTaskDelete(NULL);
 }
 
-// Conexión WiFi
-void connectWiFi() {
-  Serial.println("Conectando a WiFi...");
-  WiFi.begin(ssid, password);
-  
-  int attempts = 0;  // Contador de intentos
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-    attempts++;
-    if (attempts > 20) {  // Limitar el número de intentos
-      Serial.println("Error: No se pudo conectar a la red WiFi.");
-      return;
-    }
-  }
-  
-  Serial.println("");
-  Serial.println("¡Conexión WiFi establecida!");
-  Serial.print("Dirección IP: ");
-  Serial.println(WiFi.localIP());
-}
-
-// Conexión a MQTT
-void connectMQTT() {
-  while (!client.connected()) {
-    Serial.print("Conectando al servidor MQTT...");
-    if (client.connect(MQTT_CLIENT_ID)) {
-      Serial.println("¡Conectado!");
-    } else {
-      Serial.print("Fallo, rc=");
-      Serial.print(client.state());
-      Serial.println(" Intentando de nuevo en 5 segundos...");
-      delay(5000);
-    }
-  }
-}
-
 // Tarea para mostrar los datos en el LCD y publicar en el topico
 void vTaskLCDReceiver(void* pvParam) {
   const portTickType xTicksToWait = pdMS_TO_TICKS(250);
@@ -188,18 +194,21 @@ void vTaskLCDReceiver(void* pvParam) {
 
   for(;;) {
     if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) { // Toma el mútex
-      // Actualizar coordenadas
-      getCoordinates(prev_lat, prev_long);
       
+      if (!client.connected()) {
+        connectMQTT();
+      }
+
       xStatusHumidity = xQueueReceive(xQueueHumidity, &receivedHumidity, 0);  // Recibe el valor del DHT22
       if (xStatusHumidity) {
         currentHumidity = receivedHumidity;
         // Crear mensaje JSON
-        String message = "{\"station\":\"" + String(MQTT_CLIENT_ID) + 
-          ",\"value\":" + String(currentHumidity, 1) +
+        String message = "{\"station\":\"" + getRandomStation() + 
+          "\",\"value\":" + String(currentHumidity, 1) +
+          ",\"timestamp\":" + getEpochTime() +
         "}";
         // Publicar en MQTT
-        if (client.publish(MQTT_TOPIC, message.c_str())) {
+        if (client.publish("humiditytopic", message.c_str())) {
           Serial.println("Mensaje publicado: " + message);
         } else {
           Serial.println("Error al publicar mensaje.");
@@ -210,11 +219,12 @@ void vTaskLCDReceiver(void* pvParam) {
       if (xStatusPM10) {
         currentPM10 = receivedPM10;
         // Crear mensaje JSON
-        String message = "{\"station\":\"" + String(MQTT_CLIENT_ID) + 
-          ",\"value\":" + String(currentPM10, 1) +
+        String message = "{\"station\":\"" + getRandomStation() + 
+          "\",\"value\":" + String(currentPM10, 1) +
+          ",\"timestamp\":" + getEpochTime() +
         "}";
         // Publicar en MQTT
-        if (client.publish(MQTT_TOPIC, message.c_str())) {
+        if (client.publish("pm10topic", message.c_str())) {
           Serial.println("Mensaje publicado: " + message);
         } else {
           Serial.println("Error al publicar mensaje.");
@@ -225,20 +235,19 @@ void vTaskLCDReceiver(void* pvParam) {
       if (xStatusPM25) {
         currentPM25 = receivedPM25;
         // Crear mensaje JSON
-        String message = "{\"station\":\"" + String(MQTT_CLIENT_ID) + 
-          ",\"value\":" + String(currentPM25, 1) +
+        String message = "{\"station\":\"" + getRandomStation() + 
+          "\",\"value\":" + String(currentPM25, 1) +
+          ",\"timestamp\":" + getEpochTime() +
         "}";
         // Publicar en MQTT
-        if (client.publish(MQTT_TOPIC, message.c_str())) {
+        if (client.publish("pm25topic", message.c_str())) {
           Serial.println("Mensaje publicado: " + message);
         } else {
           Serial.println("Error al publicar mensaje.");
         }
       }
-      // Mostrar datos en OLED
+
       oled.clearDisplay();
-      oled.setTextSize(1);
-      oled.setTextColor(WHITE);
       oled.setCursor(0, 0);
       oled.print("Humedad: ");
       oled.print(currentHumidity, 1);
@@ -249,10 +258,6 @@ void vTaskLCDReceiver(void* pvParam) {
       oled.print("PM10: ");
       oled.print(currentPM10, 1);
       oled.println(" ug/m3");
-      oled.print("Lat: ");
-      oled.println(prev_lat, 5);
-      oled.print("Long: ");
-      oled.println(prev_long, 5);
       oled.display();
     }
 
@@ -272,38 +277,59 @@ void setup() {
   connectWiFi();
   client.setServer(MQTT_BROKER, MQTT_PORT);
 
+  // Configurar tiempo
+  configTimeSetup();
+
   // Inicializar DHT y pantalla OLED
   dht.begin();
-  if (!oled.begin(0x3C, OLED_RESET)) {
+
+  // Comprobacion si el display esta configurado correctamente
+  if(!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
     Serial.println("No se encontró pantalla OLED.");
     for (;;);
   }
+  
+  // Limpia la pantalla y configura texto y color 
   oled.clearDisplay();
+  oled.setTextSize(0.8);
+  oled.setTextColor(WHITE);
+  
   app_main();
+}
+
+// Funcion para obtener la hora
+unsigned long getEpochTime() {
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo)) {
+    time_t now = mktime(&timeinfo); // Convertir a time_t
+    return (unsigned long)now;
+  } else {
+    Serial.println("Failed to obtain time");
+    return 0;
+  }
 }
 
 // Funcion principal de FreeRTOS
 void app_main(void){
   if(xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
     printf("Scheduler is running\n");
-
-  if (!client.connected()) {
-    connectMQTT();
-  }
   
+  // Enceder pantalla oled
+  oled.ssd1306_command(SSD1306_DISPLAYON);
+
   // Crea colas para los datos de temperatura y potenciómetro
-  xQueueHumidity = xQueueCreate(5, sizeof(float));
-  xQueuePM10 = xQueueCreate(5, sizeof(float));
-  xQueuePM25 = xQueueCreate(5, sizeof(float));
+  xQueueHumidity = xQueueCreate(10, sizeof(float));
+  xQueuePM10 = xQueueCreate(10, sizeof(float));
+  xQueuePM25 = xQueueCreate(10, sizeof(float));
 
   xMutex = xSemaphoreCreateMutex();  // Crea el mútex
 
   // Crea las tareas solo si las colas y el mútex se crearon con éxito
   if (xQueueHumidity != NULL && xQueuePM10 != NULL && xQueuePM25 != NULL && xMutex != NULL) {
-    xTaskCreate(vTaskHumidityReader, "Humidity Reader", 4096, NULL, 1, &xHandleHumidityReader);
-    xTaskCreate(vTaskPM10Reader, "PM10 Reader", 2048, NULL, 1, &xHandlePM10Reader);
-    xTaskCreate(vTaskPM25Reader, "PM25 Reader", 2048, NULL, 2, &xHandlePM25Reader);
-    xTaskCreate(vTaskLCDReceiver, "LCD Display", 4096, NULL, 1, &xHandleLCDReceiver);
+    xTaskCreate(vTaskHumidityReader, "Humidity Reader", 8192, NULL, 1, &xHandleHumidityReader);
+    xTaskCreate(vTaskPM10Reader, "PM10 Reader", 8192, NULL, 1, &xHandlePM10Reader);
+    xTaskCreate(vTaskPM25Reader, "PM25 Reader", 8192, NULL, 1, &xHandlePM25Reader);
+    xTaskCreate(vTaskLCDReceiver, "MQTT and LCD", 8192, NULL, 2, &xHandleLCDReceiver);
   }
 }
 

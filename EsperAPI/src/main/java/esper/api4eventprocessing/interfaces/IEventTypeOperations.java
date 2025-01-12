@@ -2,11 +2,6 @@ package esper.api4eventprocessing.interfaces;
 
 import com.espertech.esper.common.client.EPCompiled;
 import com.espertech.esper.runtime.client.EPDeployment;
-import esper.api4eventprocessing.models.EventTypeDetails;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 public interface IEventTypeOperations {

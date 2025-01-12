@@ -1,0 +1,18 @@
+services:
+  react-dashboard:
+    image: mbrazalez/dashboard:latest
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_BROKER_IP: "204.236.215.146"
+ 
+  api-cep:
+    image: mbrazalez/api4eventprocessing:latest
+    environment:
+      SPRING_APPLICATION_NAME: API4EventProcessing
+      BROKER_IP: 204.236.215.146
+    ports:
+      - "8080:8080"
+ 
+
+  

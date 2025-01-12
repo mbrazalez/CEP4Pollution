@@ -23,7 +23,7 @@ const CONNECTION_NAMES = {
   A6: 'Imaginalia',
 };
 
-const mqttBrokerIP = process.env.REACT_APP_MQTTBROKERIP || 'localhost';
+const mqttBrokerIP =  process.env.REACT_APP_BROKER_IP || 'localhost';
 
 const initialState = Object.keys(CONNECTION_NAMES).reduce((acc, key) => {
   acc[key] = Array(10).fill({ x: new Date().getTime(), y: 0 });
@@ -48,8 +48,7 @@ export default function Stats() {
 
     client.on('message', (topic, message) => {
       const parsedMessage = JSON.parse(message.toString());
-      const timestamp = parsedMessage.timestamp < 1e12 ? parsedMessage.timestamp * 1000 : parsedMessage.timestamp;
-      const newPoint = { x: timestamp, y: parsedMessage.value };
+      const newPoint = { x: new Date().getTime(), y: parsedMessage.value };
       const connection = parsedMessage.station;
 
       if (CONNECTION_NAMES[connection]) {
