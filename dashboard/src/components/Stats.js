@@ -24,7 +24,7 @@ const CONNECTION_NAMES = {
 };
 
 const mqttBrokerIP =  process.env.REACT_APP_BROKER_IP || 'localhost';
-
+const openPort = process.env.REACT_APP_OPEN_PORT || 9001
 const initialState = Object.keys(CONNECTION_NAMES).reduce((acc, key) => {
   acc[key] = Array(10).fill({ x: new Date().getTime(), y: 0 });
   return acc;
@@ -38,7 +38,7 @@ export default function Stats() {
 
 
   useEffect(() => {
-    const client = mqtt.connect(`ws://${mqttBrokerIP}:9001`);
+    const client = mqtt.connect(`ws://${mqttBrokerIP}:${openPort}`);
     client.on('connect', () => {
       console.log('Connected to MQTT broker.');
       client.subscribe('highpm10topic');

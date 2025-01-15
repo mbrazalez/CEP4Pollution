@@ -4,13 +4,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_BROKER_IP: "204.236.215.146"
- 
+      REACT_APP_BROKER_IP: test.mosquitto.org
+      REACT_APP_OPEN_PORT: 8080 
+
   api-cep:
     image: mbrazalez/api4eventprocessing:latest
     environment:
       SPRING_APPLICATION_NAME: API4EventProcessing
-      BROKER_IP: 204.236.215.146
+      BROKER_IP: test.mosquitto.org
+      OPEN_PORT: 1883
     ports:
       - "8080:8080"
  

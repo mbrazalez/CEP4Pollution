@@ -4,7 +4,7 @@ from datetime import datetime
 from paho.mqtt import client as mqtt_client
 import json
 
-broker = '54.173.0.126'
+broker = 'test.mosquitto.org'
 port = 1883
 list_of_stations = ["A1", "A2", "A3", "A4", "A5", "A6"]
 
