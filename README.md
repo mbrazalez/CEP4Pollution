@@ -20,6 +20,7 @@ Ejecuta el siguiente comando en una terminal para desplegar los contenedores que
 ```bash
 docker compose up
 ```
+
 ### Paso 4: Iniciar simulación
 Ejecuta la simulación de la ESP32 con wowki
 
@@ -40,8 +41,7 @@ http://127.0.0.1:1880/
 ### Paso 7: Acceder a la dashboard de Node Red
 Para abrir la dashboard de node red haz click en la opción **dashboard** que se encuentra en el panel de opciones de la izquierda de la pantalla, una vez aquí deberás acceder a través del botón con el icono de enlace.
 
-
-### Paso 6: (Opcional) API Swagger del Motor CEP
+### Paso 8: (Opcional) API Swagger del Motor CEP
 Si estás familiarizado con Esper y el procesamiento de eventos complejos, puedes acceder a la configuración de la API en:
 ```bash
 http://localhost:8080/swagger-ui.html
@@ -51,7 +51,7 @@ En esta página encontrarás un documento de configuración de API con todas las
 ### Repositorios con el código fuente empleado para las imágenes Docker:
 - [API con el Motor CEP](https://github.com/mbrazalez/scf-project-repo/tree/dev/EsperAPI) - [Docker Image](https://hub.docker.com/r/mbrazalez/api4eventprocessing)
 - [Dashboard para la visualización de valores en tiempo real](https://github.com/mbrazalez/scf-project-repo/tree/dev/dashboard) - [Docker Image](https://hub.docker.com/r/mbrazalez/dashboard)
-
+- [Node Red con las dashboard y la conexión al bróker MQTT](https://github.com/mbrazalez/scf-project-repo/tree/dev/node-red) - [Docker Image](https://hub.docker.com/r/mbrazalez/node-red-custom)
 
 
 
