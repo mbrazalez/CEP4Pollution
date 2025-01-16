@@ -35,7 +35,7 @@ http://localhost:3000
 
 Abre tu navegador y accede al panel de node red a través de la siguiente URL:
 ```bash
-http://127.0.0.1:1880/
+http://localhost:1880/
 ```
 
 ### Paso 7: Acceder a la dashboard de Node Red
