@@ -39,7 +39,7 @@ http://127.0.0.1:1880/
 ```
 
 ### Paso 7: Acceder a la dashboard de Node Red
-Para abrir la dashboard de node red haz click en la opción **dashboard** que se encuentra en el panel de opciones de la izquierda de la pantalla, una vez aquí deberás acceder a través del botón con el icono de enlace.
+Para abrir la dashboard de node red haz click en la opción **dashboard** que se encuentra en el panel de opciones de la derecha de la pantalla, una vez aquí deberás acceder a través del botón con el icono de enlace.
 
 ### Paso 8: (Opcional) API Swagger del Motor CEP
 Si estás familiarizado con Esper y el procesamiento de eventos complejos, puedes acceder a la configuración de la API en:
