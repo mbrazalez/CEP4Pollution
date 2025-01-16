@@ -35,7 +35,7 @@ http://localhost:3000
 
 Abre tu navegador y accede al panel de node red a través de la siguiente URL:
 ```bash
-http://127.0.0.1:1880/
+http://localhost:1880/
 ```
 
 ### Paso 7: Acceder a la dashboard de Node Red
@@ -52,7 +52,6 @@ En esta página encontrarás un documento de configuración de API con todas las
 - [API con el Motor CEP](https://github.com/mbrazalez/scf-project-repo/tree/dev/EsperAPI) - [Docker Image](https://hub.docker.com/r/mbrazalez/api4eventprocessing)
 - [Dashboard para la visualización de valores en tiempo real](https://github.com/mbrazalez/scf-project-repo/tree/dev/dashboard) - [Docker Image](https://hub.docker.com/r/mbrazalez/dashboard)
 - [Node Red con las dashboard y la conexión al bróker MQTT](https://github.com/mbrazalez/scf-project-repo/tree/dev/node-red) - [Docker Image](https://hub.docker.com/r/mbrazalez/node-red-custom)
-
 
 
 
