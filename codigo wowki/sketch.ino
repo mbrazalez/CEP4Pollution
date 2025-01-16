@@ -20,7 +20,7 @@ const char* password = "";
 
 // Configuración de MQTT
 #define MQTT_CLIENT_ID "wokwi_sensor"
-#define MQTT_BROKER "204.236.215.146"
+#define MQTT_BROKER "test.mosquitto.org"
 #define MQTT_PORT 1883
 
 // Cliente MQTT
@@ -34,6 +34,10 @@ String stations[] = {"A1", "A2", "A3", "A4", "A5", "A6"};
 #define DHTPIN 27
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
+struct TempAndHumidity {
+    float temperature;
+    float humidity;
+};
 
 // Configuración de sensores analógicos
 #define PM25_PIN 34
@@ -46,7 +50,8 @@ DHT dht(DHTPIN, DHTTYPE);
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Definimos colas para almacenar los valores del sensor DHT22 y del potenciómetro
-QueueHandle_t xQueueHumidity;
+QueueHandle_t xQueueTempHumidity;
+QueueHandle_t xQueueTemperature;
 QueueHandle_t xQueuePM10;
 QueueHandle_t xQueuePM25;
 
@@ -121,17 +126,19 @@ void configTimeSetup() {
 // Tarea para leer la humedad desde el sensor DHT22
 void vTaskHumidityReader(void* pvParam){
   portBASE_TYPE xStatus;  
-  float humidity;  
+  TempAndHumidity  data;
   const portTickType xTicksToWait = pdMS_TO_TICKS(250); // Espera de 250 ms
 
-  for(;;) {
-    humidity = dht.readHumidity();
+  for(;;) { 
+    data.humidity = dht.readHumidity();
+    data.temperature = dht.readTemperature();
 
-    if (isnan(humidity)) {  // Verifica si la lectura es válida
-      Serial.println("Error al leer la temperatura del sensor DHT22");
+    if (isnan(data.humidity) || isnan(data.temperature)) {
+      Serial.println("Error al leer del sensor DHT22");
     } else {
-      xStatus = xQueueSendToBack(xQueueHumidity, &humidity, 0); // Envía el valor a la cola
+      xStatus = xQueueSendToBack(xQueueTempHumidity, &data, 0); // Envía el valor a la cola
     }
+
     vTaskDelay(xTicksToWait);  // Espera 250 ms antes de la próxima lectura
   }
   vTaskDelete(NULL);
@@ -186,11 +193,12 @@ void vTaskLCDReceiver(void* pvParam) {
   const portTickType xTicksToWait = pdMS_TO_TICKS(250);
   float receivedPM10, currentPM10;
   float receivedPM25, currentPM25;
-  float receivedHumidity, currentHumidity;
+  TempAndHumidity receivedHumidityTemp;
+  float currentTemperature, currentHumidity;
 
   portBASE_TYPE xStatusPM10;
   portBASE_TYPE xStatusPM25;  
-  portBASE_TYPE xStatusHumidity;
+  portBASE_TYPE xStatusTempHumidity;
 
   for(;;) {
     if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) { // Toma el mútex
@@ -199,21 +207,37 @@ void vTaskLCDReceiver(void* pvParam) {
         connectMQTT();
       }
 
-      xStatusHumidity = xQueueReceive(xQueueHumidity, &receivedHumidity, 0);  // Recibe el valor del DHT22
-      if (xStatusHumidity) {
-        currentHumidity = receivedHumidity;
+      xStatusTempHumidity = xQueueReceive(xQueueTempHumidity, &receivedHumidityTemp, 0);  // Recibe el valor del DHT22
+      if (xStatusTempHumidity) {
+        currentHumidity = receivedHumidityTemp.humidity;
+        currentTemperature = receivedHumidityTemp.temperature;
+
         // Crear mensaje JSON
         String message = "{\"station\":\"" + getRandomStation() + 
-          "\",\"value\":" + String(currentHumidity, 1) +
+          "\",\"value\":" + String(currentHumidity, 2) +
           ",\"timestamp\":" + getEpochTime() +
         "}";
-        // Publicar en MQTT
+        // Publicar en MQTT para el motor CEP
         if (client.publish("humiditytopic", message.c_str())) {
           Serial.println("Mensaje publicado: " + message);
         } else {
           Serial.println("Error al publicar mensaje.");
+        } 
+
+        String humidityStr = String(currentHumidity, 1);
+        String temperatureStr = String(currentTemperature, 2);
+
+        // Publicar en MQTT para Node Red
+        if (client.publish("/nr/humiditytopic", humidityStr.c_str()) &&
+        client.publish("/nr/temperaturetopic", temperatureStr.c_str())) {
+          Serial.println("Mensaje publicado: " + humidityStr);
+          Serial.println("Mensaje publicado: " + temperatureStr);
+        } else {
+          Serial.println("Error al publicar mensaje.");
         }
+
       }
+
 
       xStatusPM10 = xQueueReceive(xQueuePM10, &receivedPM10, 0);  // Recibe el valor del potenciómetro
       if (xStatusPM10) {
@@ -258,6 +282,9 @@ void vTaskLCDReceiver(void* pvParam) {
       oled.print("PM10: ");
       oled.print(currentPM10, 1);
       oled.println(" ug/m3");
+      oled.print("Temperatura: ");
+      oled.print(currentTemperature, 1);
+      oled.println(" ºC");
       oled.display();
     }
 
@@ -317,15 +344,15 @@ void app_main(void){
   // Enceder pantalla oled
   oled.ssd1306_command(SSD1306_DISPLAYON);
 
-  // Crea colas para los datos de temperatura y potenciómetro
-  xQueueHumidity = xQueueCreate(10, sizeof(float));
-  xQueuePM10 = xQueueCreate(10, sizeof(float));
-  xQueuePM25 = xQueueCreate(10, sizeof(float));
+  // Crea colas para los datos de temperatura, humedad y potenciómetros
+  xQueueTempHumidity = xQueueCreate(20, sizeof(TempAndHumidity));
+  xQueuePM10 = xQueueCreate(20, sizeof(float));
+  xQueuePM25 = xQueueCreate(20, sizeof(float));
 
   xMutex = xSemaphoreCreateMutex();  // Crea el mútex
 
   // Crea las tareas solo si las colas y el mútex se crearon con éxito
-  if (xQueueHumidity != NULL && xQueuePM10 != NULL && xQueuePM25 != NULL && xMutex != NULL) {
+  if (xQueueTempHumidity != NULL && xQueuePM10 != NULL && xQueuePM25 != NULL && xMutex != NULL) {
     xTaskCreate(vTaskHumidityReader, "Humidity Reader", 8192, NULL, 1, &xHandleHumidityReader);
     xTaskCreate(vTaskPM10Reader, "PM10 Reader", 8192, NULL, 1, &xHandlePM10Reader);
     xTaskCreate(vTaskPM25Reader, "PM25 Reader", 8192, NULL, 1, &xHandlePM25Reader);
