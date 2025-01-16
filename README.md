@@ -8,7 +8,7 @@ Este documento proporciona las instrucciones necesarias para configurar y ejecut
 ## Configuración
 
 ### Paso 1: Configurar el `docker-compose.yml`
-Modifica el archivo `docker-compose.yml` para actualizar las variables de entorno `BROKER_IP` y `REACT_APP_BROKER_IP` con la IP de tu broker MQTT, por ejemplo, `test.mosquitto.org`.
+Modifica el archivo `docker-compose.yml` para actualizar las variables de entorno `BROKER_IP`, `REACT_APP_BROKER_IP` y `MQTT_BROKER_ADDRESS` con la IP de tu broker MQTT, por ejemplo, `test.mosquitto.org`.
 
 ### Paso 2: Configurar el `sketch.ino`
 En el documento `sketch.ino` ubicado en la carpeta `codigo wowki`, cambia el valor de la variable `MQTT_BROKER` por la IP del broker.
@@ -29,6 +29,17 @@ Abre tu navegador y accede a la dashboard a través de la URL:
 ```bash
 http://localhost:3000
 ```
+
+### Paso 6: Acceder a la Node Red
+
+Abre tu navegador y accede al panel de node red a través de la siguiente URL:
+```bash
+http://127.0.0.1:1880/
+```
+
+### Paso 7: Acceder a la dashboard de Node Red
+Para abrir la dashboard de node red haz click en la opción **dashboard** que se encuentra en el panel de opciones de la izquierda de la pantalla, una vez aquí deberás acceder a través del botón con el icono de enlace.
+
 
 ### Paso 6: (Opcional) API Swagger del Motor CEP
 Si estás familiarizado con Esper y el procesamiento de eventos complejos, puedes acceder a la configuración de la API en:
