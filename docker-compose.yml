@@ -15,6 +15,17 @@ services:
       OPEN_PORT: 1883
     ports:
       - "8080:8080"
- 
+
+  node-red:
+    image: mbrazalez/node-red-custom:latest
+    environment:
+      - MQTT_BROKER_ADDRESS=test.mosquitto.org
+    ports:
+      - "1880:1880"
+    volumes:
+      - node_red_data:/data
+      
+volumes:
+  node_red_data:
 
   
