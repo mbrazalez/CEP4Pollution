@@ -296,6 +296,29 @@ void vTaskLCDReceiver(void* pvParam) {
   vTaskDelete(NULL);
 }
 
+// void vTaskMonitorStack(void* pvParam) {
+//   for (;;) {
+//     UBaseType_t highWaterHumidity = uxTaskGetStackHighWaterMark(xHandleHumidityReader);
+//     UBaseType_t highWaterPM10 = uxTaskGetStackHighWaterMark(xHandlePM10Reader);
+//     UBaseType_t highWaterPM25 = uxTaskGetStackHighWaterMark(xHandlePM25Reader);
+//     UBaseType_t highWaterLCD = uxTaskGetStackHighWaterMark(xHandleLCDReceiver);
+
+//     Serial.println("---- Stack Libre ----");
+//     Serial.print("Humidity Reader: ");
+//     Serial.println(highWaterHumidity);
+//     Serial.print("PM10 Reader: ");
+//     Serial.println(highWaterPM10);
+//     Serial.print("PM25 Reader: ");
+//     Serial.println(highWaterPM25);
+//     Serial.print("LCD MQTT Receiver: ");
+//     Serial.println(highWaterLCD);
+//     Serial.println("---------------------");
+
+//     vTaskDelay(pdMS_TO_TICKS(5000));
+//   }
+//   vTaskDelete(NULL);
+// }
+
 void setup() {
   Serial.begin(115200);
   randomSeed(analogRead(0));
@@ -353,10 +376,10 @@ void app_main(void){
 
   // Crea las tareas solo si las colas y el mútex se crearon con éxito
   if (xQueueTempHumidity != NULL && xQueuePM10 != NULL && xQueuePM25 != NULL && xMutex != NULL) {
-    xTaskCreate(vTaskHumidityReader, "Humidity Reader", 8192, NULL, 1, &xHandleHumidityReader);
-    xTaskCreate(vTaskPM10Reader, "PM10 Reader", 8192, NULL, 1, &xHandlePM10Reader);
-    xTaskCreate(vTaskPM25Reader, "PM25 Reader", 8192, NULL, 1, &xHandlePM25Reader);
-    xTaskCreate(vTaskLCDReceiver, "MQTT and LCD", 8192, NULL, 2, &xHandleLCDReceiver);
+    xTaskCreate(vTaskHumidityReader, "Humidity Reader", 2048, NULL, 1, &xHandleHumidityReader);
+    xTaskCreate(vTaskPM10Reader, "PM10 Reader", 2048, NULL, 1, &xHandlePM10Reader);
+    xTaskCreate(vTaskPM25Reader, "PM25 Reader", 2048, NULL, 1, &xHandlePM25Reader);
+    xTaskCreate(vTaskLCDReceiver, "MQTT and LCD", 4096, NULL, 2, &xHandleLCDReceiver);
   }
 }
 
