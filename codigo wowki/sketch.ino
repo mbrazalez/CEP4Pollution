@@ -68,7 +68,7 @@ float mapADC(int raw, int minADC, int maxADC, float minVal, float maxVal) {
 
 // Función para obtener estación aleatoria
 String getRandomStation() {
-  int randomIndex = random(0, 6); // Deberías incluir 6 ya que tienes 6 estaciones
+  int randomIndex = random(0, 6);
   return stations[randomIndex];
 }
 
@@ -111,7 +111,7 @@ void connectMQTT() {
 
 // Configura la zona horaria y el servidor NTP
 void configTimeSetup() {
-  // Configurar zona horaria, por ejemplo para Central European Time (CET)
+  // Configurar zona horaria
   configTime(1 * 3600, 3600, "pool.ntp.org", "time.nist.gov");
 
   Serial.println("\nWaiting for time");
@@ -351,7 +351,7 @@ void setup() {
 unsigned long getEpochTime() {
   struct tm timeinfo;
   if (getLocalTime(&timeinfo)) {
-    time_t now = mktime(&timeinfo); // Convertir a time_t
+    time_t now = mktime(&timeinfo);
     return (unsigned long)now;
   } else {
     Serial.println("Failed to obtain time");
@@ -383,6 +383,5 @@ void app_main(void){
   }
 }
 
-// Bucle vacío para mantener el esquema de Arduino
 void loop() {
 }
