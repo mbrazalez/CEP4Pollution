@@ -8,15 +8,15 @@ Este documento proporciona las instrucciones necesarias para configurar y ejecut
 ## Configuración
 
 ### Paso 1: Configurar el `docker-compose.yml`
-Modifica el archivo `docker-compose.yml` para actualizar las variables de entorno `BROKER_IP`, `REACT_APP_BROKER_IP` y `MQTT_BROKER_ADDRESS` con la IP de tu broker MQTT, por ejemplo, `test.mosquitto.org`.
+En caso de que se quiera usar un bróker MQTT propio, modifica el archivo `docker-compose.yml` para actualizar las variables de entorno `BROKER_IP`, `REACT_APP_BROKER_IP` y `MQTT_BROKER_ADDRESS` con la IP de tu broker MQTT. Esta variable viene configurada por defecto con la IP del broker público `test.mosquitto.org` el cual nos va a servir para comprobar el funcionamiento de la aplicación sin necesidad de desplegar un bróker propio.
 
 ### Paso 2: Configurar el `sketch.ino`
-En el documento `sketch.ino` ubicado en la carpeta `codigo wowki`, cambia el valor de la variable `MQTT_BROKER` por la IP del broker.
+En el documento `sketch.ino` ubicado en la carpeta `codigo wowki`, si se quisiera usar un bróker propio, cambia el valor de la variable `MQTT_BROKER` por la IP del broker. Esta variable viene configurada por defecto con el broker público `test.mosquitto.org`.
 
 ## Despliegue
 
 ### Paso 3: Desplegar los Contenedores
-Ejecuta el siguiente comando en una terminal para desplegar los contenedores que contienen la dashboard y el motor CEP:
+Dirígete a la ruta donde se encuentre el archivo `docker-compose.yml`  y ejecuta el siguiente comando en una terminal para desplegar los contenedores que contienen las dashboards y el motor CEP:
 ```bash
 docker compose up
 ```
